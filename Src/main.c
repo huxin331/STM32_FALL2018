@@ -41,13 +41,16 @@
 #include "stm32f7xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
 
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
-ADC_HandleTypeDef hadc2;
-ADC_HandleTypeDef hadc3;
+
+DAC_HandleTypeDef hdac;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
@@ -56,7 +59,10 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+#define NUM_SAMPLES 250  // number of samples per scanline
+__IO uint8_t data[NUM_SAMPLES+2];  // TEMPORARY HACK: the extra 2 slots at the end are for copying the rel_angle value before sending the Ethernet packet
+__IO uint16_t uhADCxConvertedValue = 0;
+uint16_t value[1000];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -66,15 +72,31 @@ static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_ADC1_Init(void);
-static void MX_ADC2_Init(void);
-static void MX_ADC3_Init(void);
+static void MX_DAC_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+void vprint(const char *fmt, va_list argp);
+void my_printf(const char *fmt, ...);
 
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+
+void sample_scanline() {
+	int j;
+	//redLED = 1; greenLED = blueLED = 0;  // activate only red LED
+	//t1.start();
+
+	//Tx = 1; Tx = 0; // send the Tx pulse
+
+	/* Collect samples from ADC */
+	for(j = 0; j<NUM_SAMPLES; j++) {
+		HAL_ADC_PollForConversion(&hadc1, 10);
+		data[j] = (uint8_t)HAL_ADC_GetValue(&hadc1);
+	}
+	//t1.stop();
+}
 
 /* USER CODE END 0 */
 
@@ -111,9 +133,13 @@ int main(void)
   MX_TIM2_Init();
   MX_USART1_UART_Init();
   MX_ADC1_Init();
-  MX_ADC2_Init();
-  MX_ADC3_Init();
+  MX_DAC_Init();
   /* USER CODE BEGIN 2 */
+  if (HAL_ADC_Start_IT(&hadc1) != HAL_OK)
+    {
+      /* Start Conversation Error */
+      Error_Handler();
+    }
 
   /* USER CODE END 2 */
 
@@ -125,8 +151,22 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_0|GPIO_PIN_14|GPIO_PIN_7);
-	  HAL_Delay(1000);
+
+	  //HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_0|GPIO_PIN_14|GPIO_PIN_7);
+	  //char *msg = "Hello\r\n";
+	  //my_printf(msg);
+	  //HAL_ADC_PollForConversion(&hadc1, 10);
+	  for (int i = 0; i < 1000; i++){
+		  value[i] = HAL_ADC_GetValue(&hadc1);
+	  }
+	  //my_printf("ADC Reading: %d\r\n", value);
+	  for (int i = 0; i < 1000; i++){
+		  my_printf("%d\r\n",value[i]);
+	  }
+
+	  //HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_8B_R, 1024);
+	  //HAL_Delay(200);
+
 
   }
   /* USER CODE END 3 */
@@ -217,7 +257,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 1;
   hadc1.Init.DMAContinuousRequests = ENABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.EOCSelection = DISABLE;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -235,74 +275,25 @@ static void MX_ADC1_Init(void)
 
 }
 
-/* ADC2 init function */
-static void MX_ADC2_Init(void)
+/* DAC init function */
+static void MX_DAC_Init(void)
 {
 
-  ADC_ChannelConfTypeDef sConfig;
+  DAC_ChannelConfTypeDef sConfig;
 
-    /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
+    /**DAC Initialization 
     */
-  hadc2.Instance = ADC2;
-  hadc2.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
-  hadc2.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc2.Init.ContinuousConvMode = ENABLE;
-  hadc2.Init.DiscontinuousConvMode = DISABLE;
-  hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc2.Init.NbrOfConversion = 1;
-  hadc2.Init.DMAContinuousRequests = ENABLE;
-  hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  if (HAL_ADC_Init(&hadc2) != HAL_OK)
+  hdac.Instance = DAC;
+  if (HAL_DAC_Init(&hdac) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+    /**DAC channel OUT1 config 
     */
-  sConfig.Channel = ADC_CHANNEL_0;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-}
-
-/* ADC3 init function */
-static void MX_ADC3_Init(void)
-{
-
-  ADC_ChannelConfTypeDef sConfig;
-
-    /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
-    */
-  hadc3.Instance = ADC3;
-  hadc3.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
-  hadc3.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc3.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc3.Init.ContinuousConvMode = ENABLE;
-  hadc3.Init.DiscontinuousConvMode = DISABLE;
-  hadc3.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc3.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc3.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc3.Init.NbrOfConversion = 1;
-  hadc3.Init.DMAContinuousRequests = ENABLE;
-  hadc3.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  if (HAL_ADC_Init(&hadc3) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-    /**Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
-    */
-  sConfig.Channel = ADC_CHANNEL_0;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
+  sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
+  if (HAL_DAC_ConfigChannel(&hdac, &sConfig, DAC_CHANNEL_1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -382,7 +373,7 @@ static void MX_USART1_UART_Init(void)
 {
 
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 9600;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -428,6 +419,36 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+  * @brief  Conversion complete callback in non blocking mode
+  * @param  AdcHandle : AdcHandle handle
+  * @note   This example shows a simple way to report end of conversion, and
+  *         you can add your own implementation.
+  * @retval None
+  */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc1)
+{
+  /* Get the converted value of regular channel */
+  uhADCxConvertedValue = HAL_ADC_GetValue(hadc1);
+  my_printf("ADC Reading: %d\r\n", uhADCxConvertedValue);
+}
+
+void vprint(const char *fmt, va_list argp)
+{
+    char string[200];
+    if(0 < vsprintf(string,fmt,argp)) // build string
+    {
+        HAL_UART_Transmit(&huart1, (uint8_t*)string, strlen(string), 0xffffff); // send message via UART
+    }
+}
+
+void my_printf(const char *fmt, ...) // custom printf() function
+{
+    va_list argp;
+    va_start(argp, fmt);
+    vprint(fmt, argp);
+    va_end(argp);
+}
 
 /* USER CODE END 4 */
 

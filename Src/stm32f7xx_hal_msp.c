@@ -101,46 +101,6 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
 
   /* USER CODE END ADC1_MspInit 1 */
   }
-  else if(hadc->Instance==ADC2)
-  {
-  /* USER CODE BEGIN ADC2_MspInit 0 */
-
-  /* USER CODE END ADC2_MspInit 0 */
-    /* Peripheral clock enable */
-    __HAL_RCC_ADC2_CLK_ENABLE();
-  
-    /**ADC2 GPIO Configuration    
-    PA0/WKUP     ------> ADC2_IN0 
-    */
-    GPIO_InitStruct.Pin = GPIO_PIN_0;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN ADC2_MspInit 1 */
-
-  /* USER CODE END ADC2_MspInit 1 */
-  }
-  else if(hadc->Instance==ADC3)
-  {
-  /* USER CODE BEGIN ADC3_MspInit 0 */
-
-  /* USER CODE END ADC3_MspInit 0 */
-    /* Peripheral clock enable */
-    __HAL_RCC_ADC3_CLK_ENABLE();
-  
-    /**ADC3 GPIO Configuration    
-    PA0/WKUP     ------> ADC3_IN0 
-    */
-    GPIO_InitStruct.Pin = GPIO_PIN_0;
-    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN ADC3_MspInit 1 */
-
-  /* USER CODE END ADC3_MspInit 1 */
-  }
 
 }
 
@@ -164,39 +124,55 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 
   /* USER CODE END ADC1_MspDeInit 1 */
   }
-  else if(hadc->Instance==ADC2)
+
+}
+
+void HAL_DAC_MspInit(DAC_HandleTypeDef* hdac)
+{
+
+  GPIO_InitTypeDef GPIO_InitStruct;
+  if(hdac->Instance==DAC)
   {
-  /* USER CODE BEGIN ADC2_MspDeInit 0 */
+  /* USER CODE BEGIN DAC_MspInit 0 */
 
-  /* USER CODE END ADC2_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_ADC2_CLK_DISABLE();
+  /* USER CODE END DAC_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_DAC_CLK_ENABLE();
   
-    /**ADC2 GPIO Configuration    
-    PA0/WKUP     ------> ADC2_IN0 
+    /**DAC GPIO Configuration    
+    PA4     ------> DAC_OUT1 
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
+    GPIO_InitStruct.Pin = GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /* USER CODE BEGIN ADC2_MspDeInit 1 */
+  /* USER CODE BEGIN DAC_MspInit 1 */
 
-  /* USER CODE END ADC2_MspDeInit 1 */
+  /* USER CODE END DAC_MspInit 1 */
   }
-  else if(hadc->Instance==ADC3)
+
+}
+
+void HAL_DAC_MspDeInit(DAC_HandleTypeDef* hdac)
+{
+
+  if(hdac->Instance==DAC)
   {
-  /* USER CODE BEGIN ADC3_MspDeInit 0 */
+  /* USER CODE BEGIN DAC_MspDeInit 0 */
 
-  /* USER CODE END ADC3_MspDeInit 0 */
+  /* USER CODE END DAC_MspDeInit 0 */
     /* Peripheral clock disable */
-    __HAL_RCC_ADC3_CLK_DISABLE();
+    __HAL_RCC_DAC_CLK_DISABLE();
   
-    /**ADC3 GPIO Configuration    
-    PA0/WKUP     ------> ADC3_IN0 
+    /**DAC GPIO Configuration    
+    PA4     ------> DAC_OUT1 
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4);
 
-  /* USER CODE BEGIN ADC3_MspDeInit 1 */
+  /* USER CODE BEGIN DAC_MspDeInit 1 */
 
-  /* USER CODE END ADC3_MspDeInit 1 */
+  /* USER CODE END DAC_MspDeInit 1 */
   }
 
 }
