@@ -69,7 +69,7 @@ int endCounter = 0;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_DMA_Init(void);
+//static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_ADC1_Init(void);
 
@@ -82,6 +82,7 @@ void my_printf(const char *fmt, ...);
 
 /* USER CODE BEGIN 0 */
 
+/*
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 	value[0] = read_value;
 	//my_printf("Counter: %d \r\n", counter);
@@ -95,7 +96,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 		HAL_ADC_Stop_DMA(&hadc1);
 	}
 }
-
+*/
 
 
 /* USER CODE END 0 */
@@ -130,9 +131,10 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
+  //MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_ADC1_Init();
+  HAL_ADC_Start(&hadc1);
   /* USER CODE BEGIN 2 */
 
 
@@ -150,13 +152,17 @@ int main(void)
 	  //HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_0|GPIO_PIN_14|GPIO_PIN_7);
 	  //char *msg = "Hello\r\n";
 	  //my_printf(msg);
-	  //HAL_ADC_Start(&hadc1);
-	  //HAL_ADC_PollForConversion(&hadc1, 10);
+
+	  HAL_ADC_PollForConversion(&hadc1, 10);
+	  uint8_t value = HAL_ADC_GetValue(&hadc1);
+	  my_printf("ADC: %d \r\n",value);
+	  /*
 	  startCounter = HAL_GetTick();
 	  for (int i = 0; i < numSample; i++){
 		  value[i] = HAL_ADC_GetValue(&hadc1);
 	  }
 	  endCounter = HAL_GetTick();
+	  */
 
 	  //my_printf("ADC Reading: %d\r\n", value);
 	  /*
@@ -165,8 +171,8 @@ int main(void)
 	  }
 	  */
 
-	  float ADC_Speed = numSample/(float)((float)(endCounter - startCounter)/1000);
-	  my_printf("ADC Speed without DMA: %f samples/s \r\n", ADC_Speed);
+	  //float ADC_Speed = numSample/(float)((float)(endCounter - startCounter)/1000);
+	  //my_printf("ADC Speed without DMA: %f samples/s \r\n", ADC_Speed);
 
 	  //my_printf("Start Time: %d \r\n", startCounter);
 	  //my_printf("End Time: %d \r\n", endCounter);
@@ -314,17 +320,8 @@ static void MX_USART1_UART_Init(void)
 /** 
   * Enable DMA controller clock
   */
-static void MX_DMA_Init(void) 
-{
-  /* DMA controller clock enable */
-  __HAL_RCC_DMA2_CLK_ENABLE();
 
-  /* DMA interrupt init */
-  /* DMA2_Stream0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
 
-}
 
 /** Configure pins as 
         * Analog 
