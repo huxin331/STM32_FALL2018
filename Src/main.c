@@ -45,6 +45,14 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include "defines.h"
+#include "tm_stm32_disco.h"
+#include "tm_stm32_delay.h"
+#include "tm_stm32_i2c.h"
+
+/* MPU-6050 device address */
+#define MPU6050_ADDRESS     0xD0
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -116,6 +124,7 @@ int main(void)
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
+
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -134,6 +143,15 @@ int main(void)
   MX_USART1_UART_Init();
   MX_ADC1_Init();
   MX_DAC_Init();
+  /* Init leds */
+      TM_DISCO_LedInit();
+
+      /* Init delay */
+      TM_DELAY_Init();
+
+      /* Init I2C, SCL = PB8, SDA = PB9, available on Arduino headers and on all discovery boards */
+      /* For STM32F4xx and STM32F7xx lines */
+      TM_I2C_Init(I2C1, TM_I2C_PinsPack_2, 100000);
   /* USER CODE BEGIN 2 */
   if (HAL_ADC_Start_IT(&hadc1) != HAL_OK)
     {
@@ -145,6 +163,20 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  Adafruit_LSM9DS0 lsm = Adafruit_LSM9DS0();
+  if(!lsm.begin())
+    {
+      /* There was a problem detecting the LSM9DS0 ... check your connections */
+      Serial.print(F("Ooops, no LSM9DS0 detected ... Check your wiring!"));
+      while(1);
+    }
+  lsm.setupAccel(lsm.LSM9DS0_ACCELRANGE_2G);
+  lsm.setupMag(lsm.LSM9DS0_MAGGAIN_2GAUSS);
+  lsm.setupGyro(lsm.LSM9DS0_GYROSCALE_245DPS);
+  sensors_event_t accel, mag, gyro, temp;
+  lsm.getEvent(&accel, &mag, &gyro, &temp);
+
   while (1)
   {
 
