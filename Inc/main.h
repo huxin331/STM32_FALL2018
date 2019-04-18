@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2018 STMicroelectronics
+  * COPYRIGHT(c) 2019 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -43,12 +43,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
 /* Private define ------------------------------------------------------------*/
-
 /* ########################## Assert Selection ############################## */
 /**
   * @brief Uncomment the line below to expanse the "assert_param" macro in the 
@@ -71,5 +66,4 @@ void _Error_Handler(char *, int);
 #endif
 
 #endif /* __MAIN_H__ */
-
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
