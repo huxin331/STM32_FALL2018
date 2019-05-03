@@ -58,3 +58,5 @@ MDK-ARM/STM32_FALL2018/stm32f7xx_it.crf
 MDK-ARM/STM32_FALL2018/stm32f7xx_it.o
 MDK-ARM/STM32_FALL2018/system_stm32f7xx.crf
 MDK-ARM/STM32_FALL2018/system_stm32f7xx.o
+*.o
+*.crf
