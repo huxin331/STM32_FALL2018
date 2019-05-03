@@ -61,11 +61,13 @@ TIM_OC_InitTypeDef sConfig;
 uint32_t uhPrescalerValue = 0;
 /* USER CODE BEGIN PV */
 
+
 /* Private variables ---------------------------------------------------------*/
 #define ADC_BUFFER_LENGTH 10000
 uint32_t ADCBuffer[ADC_BUFFER_LENGTH];
 #define  PERIOD_VALUE       (uint32_t)(4000 - 1)  /* Period Value  */
 #define  PULSE1_VALUE       (uint32_t)(3)        /* Capture Compare 1 Value  */
+#define  ADC_THRESHHOLD   30
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -77,6 +79,8 @@ static void MX_ADC2_Init(void);
 static void MX_ADC3_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIMER3_Init(void);
+static uint32_t averageCal(int number, uint32_t* data);
+
 /*SER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 void vprint(const char *fmt, va_list argp);
@@ -86,6 +90,9 @@ int startCounter;
 int endCounter;
 
 __IO uint8_t data;
+
+static uint32_t count = 0;
+
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
 {
 		//endCounter = HAL_GetTick();
@@ -93,11 +100,42 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* AdcHandle)
     //my_printf("Start Counter: %d \r\n", startCounter);
     //my_printf("End Counter: %d \r\n", endCounter);
     //my_printf("ADC Speed is: %f samples/s \r\n", ADC_Speed);
+	
+	
+	/*--------------------------data compression -----------------------------------------*/
     for (int i = 0; i < ADC_BUFFER_LENGTH; i++){
 			data = ADCBuffer[i] & 0x00FF;
-    	my_printf("%d \r\n", data);
+			if(data < 30){
+				count++;
+			}else{
+				if(count != 0){
+					my_printf("count is %d\r\n", count);
+					my_printf("%d\r\n", data);
+					count = 0;
+				}else{
+					 my_printf("%d \r\n", data);
+				}
+			}
     }
+		
+		
+		/*---------------------no compression---------------------------------------------*/
+//		for (int i = 0; i < ADC_BUFFER_LENGTH; i++){
+//			data = ADCBuffer[i] & 0x00FF;
+//			my_printf("%d \r\n", data);
+//    }
 		//startCounter = HAL_GetTick();
+}
+
+
+//get average value to reduce measurement error 
+ uint32_t averageCal(int number, uint32_t* data){
+	uint32_t sum = 0;
+	for (int i = 0; i < number; i++){
+		sum = sum + data[i];
+	}
+	return sum/number;
+		
 }
 
 /* USER CODE END PFP */
@@ -381,7 +419,7 @@ static void MX_USART1_UART_Init(void)
 {
 
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 921600;
+  huart1.Init.BaudRate = 115200 ;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
